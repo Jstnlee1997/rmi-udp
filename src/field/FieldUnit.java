@@ -3,15 +3,19 @@ package field;
  * Created on Feb 2022
  */
 
+import centralserver.CentralServer;
 import centralserver.ICentralServer;
 import common.MessageInfo;
 
 import java.io.IOException;
 import java.net.*;
+import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 
 public class FieldUnit implements IFieldUnit {
   private ICentralServer central_server;
+  private LocationSensor locationSensor;
 
   /* Note: Could you discuss in one line of comment what do you think can be
    * an appropriate size for buffsize?
@@ -37,8 +42,8 @@ public class FieldUnit implements IFieldUnit {
   private int timeout = 50000;
   private static final int k = 7;
 
-  ArrayList<MessageInfo> receivedMessages;
-  ArrayList<Float> movingAverages;
+  List<MessageInfo> receivedMessages;
+  List<Float> movingAverages;
 
 //
 //    public FieldUnit () {
@@ -74,32 +79,29 @@ public class FieldUnit implements IFieldUnit {
   public void receiveMeasures(int port, int timeout) throws SocketException {
 
     this.timeout = timeout;
+    boolean listen = true;
+    byte[] buffer = new byte[buffsize];
+    int msgCounter = 0;
 
     /* TODO: Create UDP socket and bind to local port 'port' */
-    DatagramSocket aSocket = null;
+    DatagramSocket aSocket;
     try {
       aSocket = new DatagramSocket(port);
-
     } catch (SocketException e) {
       System.out.println("Socket: " + e.getMessage());
+      throw new SocketException();
     }
-
-    boolean listen = true;
-
 
     System.out.println("[Field Unit] Listening on port: " + port);
 
-    byte[] buffer = new byte[buffsize];
-
-    int msgCounter = 0;
-
     while (listen) {
-
             /* TODO: Receive until all messages in the transmission (msgTot) have been received or
                 until there is nothing more to be received */
       DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+
       try {
-        assert aSocket != null;
+        // Set timeout
+        aSocket.setSoTimeout(this.timeout);
         aSocket.receive(request);
       } catch (IOException ex) {
         ex.printStackTrace();
@@ -141,7 +143,6 @@ public class FieldUnit implements IFieldUnit {
     int port = Integer.parseInt(args[0]);
     String address = args[1];
 
-
     /* TODO: Construct Field Unit Object */
     FieldUnit fieldUnit = new FieldUnit();
 
@@ -162,7 +163,7 @@ public class FieldUnit implements IFieldUnit {
     /* TODO: Send data to the Central Serve via RMI and
      *        wait for incoming transmission again
      */
-
+    fieldUnit.sendAverages();
   }
 
 
@@ -173,19 +174,58 @@ public class FieldUnit implements IFieldUnit {
      * the policy file
      */
 
-    /* System.setProperty("java.security.policy","file:./policy\n"); */
+    System.setProperty("java.security.policy", "file:./policy\n");
 
     /* TODO: Initialise Security Manager */
+//    if (System.getSecurityManager() == null) {
+//      System.setSecurityManager(new SecurityManager());
+//    }
 
     /* TODO: Bind to RMIServer */
+    /* TODO: Check this! */
+    // Difference between the two below is that the first one is implementing of the client
+
+//    try {
+//      Registry registry = LocateRegistry.getRegistry(address);
+//      ICentralServer stub = (ICentralServer) registry.lookup("Central Server");
+//    } catch (RemoteException | NotBoundException e) {
+//      System.out.println("Server exception: " + e);
+//      e.printStackTrace();
+//    }
+    try {
+      Registry registry = LocateRegistry.getRegistry(address);
+      registry.bind("Central Server", central_server);
+    } catch (RemoteException | AlreadyBoundException e) {
+      System.out.println("Server exception: " + e);
+      e.printStackTrace();
+    }
 
     /* TODO: Send pointer to LocationSensor to RMI Server */
-
+    /* TODO: ensure that fieldUnit hosts a locationSensor */
+    try {
+      central_server.setLocationSensor(this.locationSensor);
+    } catch (RemoteException e) {
+      System.out.println("Server exception: " + e);
+      e.printStackTrace();
+    }
   }
 
   @Override
   public void sendAverages() {
     /* TODO: Attempt to send messages the specified number of times */
+    int numberOfAverages = receivedMessages.size();
+    int totalMessages = receivedMessages.get(0).getTotalMessages();
+    for (int i = 0; i < numberOfAverages; i++) {
+      // Create new MessageInfo where the message is the respective movingAverage
+      int messageNum = receivedMessages.get(i).getMessageNum();
+      MessageInfo msg = new MessageInfo(totalMessages, messageNum, movingAverages.get(i));
+      try {
+        this.central_server.receiveMsg(msg);
+      } catch (RemoteException e) {
+        e.printStackTrace();
+      }
+    }
+
 
   }
 
@@ -206,7 +246,8 @@ public class FieldUnit implements IFieldUnit {
 
 
     /* TODO: Now re-initialise data structures for next time */
-
+    receivedMessages = null;
+    movingAverages = null;
 
   }
 
