@@ -11,6 +11,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /* You can add/change/delete class attributes if you think it would be
@@ -25,11 +26,14 @@ public class CentralServer implements ICentralServer {
   private ILocationSensor locationSensor;
 
   List<Float> movingAverages;
+  List<MessageInfo> receivedMessages;
+  int msgCounter;
+  int msgTot;
 
   protected CentralServer() throws RemoteException {
     super();
 
-    /* TODO: Initialise Array receivedMessages */
+    /* TODO: Initialise Array receivedMessages <<-- I DON'T SEE WHY WE DO THAT HERE*/
 
   }
 
@@ -72,26 +76,37 @@ public class CentralServer implements ICentralServer {
     System.out.println("[Central Server] Received message " + (msg.getMessageNum()) + " out of " +
         msg.getTotalMessages() + ". Measure = " + msg.getMessage());
 
-
+    if (msg.getMessageNum() == 1)
+    {
+      msgCounter = 0;
+      msgTot = msg.getTotalMessages();
+      receivedMessages = new ArrayList<>(Collections.nCopies(msgTot, null));
+    }
+    msgCounter++;
     /* TODO: If this is the first message, reset counter and initialise data structure. */
-
-
+    receivedMessages.add(msg); /* THIS IS PROBABLY NOT RIGHT AS IT PROBABLY ADDS TO THE END OF ALL THE NULLS *?
     /* TODO: Save current message */
 
+    if(msg.getMessageNum() == msgTot)
+    {
+      printStats();
+    }
     /* TODO: If I received everything that there was to be received, prints stats. */
-
 
   }
 
   public void printStats() {
     /* TODO: Find out how many messages were missing */
+    int numMissing = msgTot - - receivedMessages.size();
 
-    /* TODO: Print stats (i.e. how many message missing?
-     * do we know their sequence number? etc.) */
+    /* TODO: Print stats (i.e. how many message missing? */
+    System.out.printf("Total Missing Messages = %d out of %d", numMissing, msgTot);
 
     /* TODO: Print the location of the Field Unit that sent the messages */
+    /* NOT SURE HOW TO DEAL WITH LOCATION STUFF */
 
     /* TODO: Now re-initialise data structures for next time */
+    receivedMessages = null;
 
   }
 
