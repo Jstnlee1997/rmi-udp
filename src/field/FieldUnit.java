@@ -9,6 +9,8 @@ import common.MessageInfo;
 import java.io.IOException;
 import java.net.*;
 import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -184,17 +186,18 @@ public class FieldUnit implements IFieldUnit {
     /* TODO: Check this! */
     // Difference between the two below is that the first one is implementing of the client
 
-//    try {
-//      Registry registry = LocateRegistry.getRegistry(address);
-//      ICentralServer stub = (ICentralServer) registry.lookup("Central Server");
-//    } catch (RemoteException | NotBoundException e) {
-//      System.out.println("Server exception: " + e);
-//      e.printStackTrace();
-
     try {
-      central_server = (ICentralServer) Naming.lookup(address);
-    } catch (NotBoundException | MalformedURLException | RemoteException e) {
+      Registry registry = LocateRegistry.getRegistry(address);
+      central_server = (ICentralServer) registry.lookup("ICentralServer");
+
+    } catch (RemoteException | NotBoundException e) {
+      System.out.println("Server exception: " + e);
       e.printStackTrace();
+//
+//    try {
+//      central_server = (ICentralServer) Naming.lookup(address);
+//    } catch (NotBoundException | MalformedURLException | RemoteException e) {
+//      e.printStackTrace();
     }
 
 

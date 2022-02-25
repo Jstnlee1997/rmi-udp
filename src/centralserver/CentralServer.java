@@ -40,7 +40,7 @@ public class CentralServer implements ICentralServer {
   }
 
   public static void main(String[] args) throws RemoteException {
-    CentralServer cs = new CentralServer();
+    ICentralServer cs = new CentralServer();
 
     /* If you are running the program within an IDE instead of using the
      * provided bash scripts, you can use the following line to set
