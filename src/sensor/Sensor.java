@@ -98,7 +98,8 @@ public class Sensor implements ISensor {
 
       /* Third, we send the message */
       try {
-        s = new DatagramSocket(port);
+        s = new DatagramSocket();
+        s.connect(dst_addr, port);
       } catch (SocketException e) {
         e.printStackTrace();
       }
