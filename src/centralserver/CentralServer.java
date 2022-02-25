@@ -14,6 +14,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.rmi.Naming;
 
 /* You can add/change/delete class attributes if you think it would be
  * appropriate.
@@ -61,7 +62,9 @@ public class CentralServer implements ICentralServer {
     /* TODO: Bind to Registry */
     // Bind the remote object's stub in the registry
     try {
+      // CHECK THIS
       registry.bind("ICentralServer", stub);
+//      Naming.rebind("CentralServer", )
     } catch (AlreadyBoundException e) {
       e.printStackTrace();
     }
@@ -105,6 +108,12 @@ public class CentralServer implements ICentralServer {
 
     /* TODO: Print the location of the Field Unit that sent the messages */
     /* NOT SURE HOW TO DEAL WITH LOCATION STUFF */
+    try {
+      System.out.printf("[Field Unit] Current Location: lat = %d long = %d",
+          locationSensor.getCurrentLocation().getLatitude(), locationSensor.getCurrentLocation().getLongitude());
+    } catch (RemoteException e) {
+      e.printStackTrace();
+    }
 
     /* TODO: Now re-initialise data structures for next time */
     receivedMessages = null;
