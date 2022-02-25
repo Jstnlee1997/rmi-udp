@@ -3,24 +3,17 @@ package field;
  * Created on Feb 2022
  */
 
-import centralserver.CentralServer;
 import centralserver.ICentralServer;
 import common.MessageInfo;
 
 import java.io.IOException;
 import java.net.*;
-import java.rmi.AlreadyBoundException;
-import java.rmi.NotBoundException;
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
+import java.rmi.*;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /* You can add/change/delete class attributes if you think it would be
  * appropriate.
@@ -36,6 +29,8 @@ public class FieldUnit implements IFieldUnit {
   /* Note: Could you discuss in one line of comment what do you think can be
    * an appropriate size for buffsize?
    * (Which is used to init DatagramPacket?)
+   *
+   * A Chunk size is usually around 2MB hence the buffer size, and packets are usually much less in size.
    */
 
   private static final int buffsize = 2048;
@@ -45,11 +40,15 @@ public class FieldUnit implements IFieldUnit {
   List<MessageInfo> receivedMessages;
   List<Float> movingAverages;
 
-//
-//    public FieldUnit () {
-//        /* TODO: Initialise data structures */
-//
-//    }
+
+    public FieldUnit () {
+      /* TODO: Initialise data structures */
+      try {
+        locationSensor = new LocationSensor();
+      } catch (RemoteException e) {
+        e.printStackTrace();
+      }
+    }
 
   @Override
   public void addMessage(MessageInfo msg) {
@@ -117,7 +116,7 @@ public class FieldUnit implements IFieldUnit {
       /* TODO: If this is the first message, initialise the receive data structure before storing it. */
       if (msgCounter == 0) {
         assert msg != null;
-        receivedMessages = new ArrayList<>(Collections.nCopies(msg.getTotalMessages(), null));
+        receivedMessages = new ArrayList<>();
       }
 
       /* TODO: Store the message */
@@ -126,7 +125,7 @@ public class FieldUnit implements IFieldUnit {
 
       /* TODO: Keep listening UNTIL done with receiving  */
       assert msg != null;
-      if (receivedMessages.size() >= msg.getTotalMessages()) listen = false;
+      if (msg.getMessageNum() == msg.getTotalMessages()) listen = false;
     }
 
     /* TODO: Close socket  */
@@ -177,9 +176,9 @@ public class FieldUnit implements IFieldUnit {
     System.setProperty("java.security.policy", "file:./policy\n");
 
     /* TODO: Initialise Security Manager */
-//    if (System.getSecurityManager() == null) {
-//      System.setSecurityManager(new SecurityManager());
-//    }
+    if (System.getSecurityManager() == null) {
+      System.setSecurityManager(new SecurityManager());
+    }
 
     /* TODO: Bind to RMIServer */
     /* TODO: Check this! */
@@ -191,14 +190,13 @@ public class FieldUnit implements IFieldUnit {
 //    } catch (RemoteException | NotBoundException e) {
 //      System.out.println("Server exception: " + e);
 //      e.printStackTrace();
-//    }
+
     try {
-      Registry registry = LocateRegistry.getRegistry(address);
-      registry.bind("Central Server", central_server);
-    } catch (RemoteException | AlreadyBoundException e) {
-      System.out.println("Server exception: " + e);
+      central_server = (ICentralServer) Naming.lookup(address);
+    } catch (NotBoundException | MalformedURLException | RemoteException e) {
       e.printStackTrace();
     }
+
 
     /* TODO: Send pointer to LocationSensor to RMI Server */
     /* TODO: ensure that fieldUnit hosts a locationSensor */
@@ -239,7 +237,8 @@ public class FieldUnit implements IFieldUnit {
      * do we know their sequence number? etc.) */
 
     for (int i = 0; i < movingAverages.size(); i++) {
-      System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f", receivedMessages.get(i).getMessageNum(), msgTot, movingAverages.get(i));
+      System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f",
+          receivedMessages.get(i).getMessageNum(), msgTot, movingAverages.get(i));
     }
 
     System.out.printf("Total Missing Messages = %d out of %d", missingMessages, msgTot);

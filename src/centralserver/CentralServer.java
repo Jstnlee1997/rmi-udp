@@ -6,6 +6,7 @@ import field.ILocationSensor;
  * Created on Feb 2022
  */
 import java.rmi.AlreadyBoundException;
+import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -48,25 +49,24 @@ public class CentralServer implements ICentralServer {
     System.setProperty("java.security.policy", "file:./policy\n");
 
     /* TODO: Configure Security Manager */
-//    if (System.getSecurityManager() == null) {
-//      System.setSecurityManager(new SecurityManager());
-//    }
+    if (System.getSecurityManager() == null) {
+      System.setSecurityManager(new RMISecurityManager());
+    }
 
     /* TODO: Create (or Locate) Registry */
-    ICentralServer stub = (ICentralServer) UnicastRemoteObject.exportObject(cs, 0);
 
-    // Bind the remote object's stub in the registry
+    ICentralServer stub = (ICentralServer) UnicastRemoteObject.exportObject(cs, 0);
     Registry registry = LocateRegistry.getRegistry();
+
+    /* TODO: Bind to Registry */
+    // Bind the remote object's stub in the registry
     try {
-      registry.bind("Central Server", stub);
+      registry.bind("ICentralServer", stub);
     } catch (AlreadyBoundException e) {
       e.printStackTrace();
     }
 
-    /* TODO: Bind to Registry */
-
     System.out.println("Central Server is running...");
-
 
   }
 
@@ -76,28 +76,29 @@ public class CentralServer implements ICentralServer {
     System.out.println("[Central Server] Received message " + (msg.getMessageNum()) + " out of " +
         msg.getTotalMessages() + ". Measure = " + msg.getMessage());
 
+    /* TODO: If this is the first message, reset counter and initialise data structure. */
     if (msg.getMessageNum() == 1)
     {
       msgCounter = 0;
       msgTot = msg.getTotalMessages();
-      receivedMessages = new ArrayList<>(Collections.nCopies(msgTot, null));
+      receivedMessages = new ArrayList<>();
     }
-    msgCounter++;
-    /* TODO: If this is the first message, reset counter and initialise data structure. */
-    receivedMessages.add(msg); /* THIS IS PROBABLY NOT RIGHT AS IT PROBABLY ADDS TO THE END OF ALL THE NULLS *?
-    /* TODO: Save current message */
 
-    if(msg.getMessageNum() == msgTot)
+    /* TODO: Save current message */
+    receivedMessages.add(msg);
+    msgCounter++;
+
+    /* TODO: If I received everything that there was to be received, prints stats. */
+    // THIS NEEDS TO CHANGE
+    if(msgCounter == msgTot)
     {
       printStats();
     }
-    /* TODO: If I received everything that there was to be received, prints stats. */
-
   }
 
   public void printStats() {
     /* TODO: Find out how many messages were missing */
-    int numMissing = msgTot - - receivedMessages.size();
+    int numMissing = msgTot - receivedMessages.size();
 
     /* TODO: Print stats (i.e. how many message missing? */
     System.out.printf("Total Missing Messages = %d out of %d", numMissing, msgTot);
