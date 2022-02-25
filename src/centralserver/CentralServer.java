@@ -27,7 +27,6 @@ public class CentralServer implements ICentralServer {
 
   private ILocationSensor locationSensor;
 
-  List<Float> movingAverages;
   List<MessageInfo> receivedMessages;
   int msgCounter;
   int msgTot;
@@ -57,17 +56,13 @@ public class CentralServer implements ICentralServer {
     /* TODO: Create (or Locate) Registry */
 
     ICentralServer stub = (ICentralServer) UnicastRemoteObject.exportObject(cs, 0);
-    Registry registry = LocateRegistry.getRegistry();
+    Registry registry = LocateRegistry.createRegistry(5000);
 
     /* TODO: Bind to Registry */
     // Bind the remote object's stub in the registry
-    try {
-      // CHECK THIS
-      registry.bind("ICentralServer", stub);
+    // CHECK THIS
+    registry.rebind("ICentralServer", stub);
 //      Naming.rebind("CentralServer", )
-    } catch (AlreadyBoundException e) {
-      e.printStackTrace();
-    }
 
     System.out.println("Central Server is running...");
 
@@ -109,8 +104,7 @@ public class CentralServer implements ICentralServer {
     /* TODO: Print the location of the Field Unit that sent the messages */
     /* NOT SURE HOW TO DEAL WITH LOCATION STUFF */
     try {
-      System.out.printf("[Field Unit] Current Location: lat = %d long = %d",
-          locationSensor.getCurrentLocation().getLatitude(), locationSensor.getCurrentLocation().getLongitude());
+      printLocation();
     } catch (RemoteException e) {
       e.printStackTrace();
     }
@@ -124,11 +118,17 @@ public class CentralServer implements ICentralServer {
   public void setLocationSensor(ILocationSensor locationSensor) throws RemoteException {
 
     /* TODO: Set location sensor */
-
+    this.locationSensor = locationSensor;
     System.out.println("Location Sensor Set");
   }
 
   public void printLocation() throws RemoteException {
     /* TODO: Print location on screen from remote reference */
+    try {
+      System.out.printf("[Field Unit] Current Location: lat = %f long = %f",
+          locationSensor.getCurrentLocation().getLatitude(), locationSensor.getCurrentLocation().getLongitude());
+    } catch (RemoteException e) {
+      e.printStackTrace();
+    }
   }
 }

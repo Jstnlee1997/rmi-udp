@@ -187,7 +187,7 @@ public class FieldUnit implements IFieldUnit {
     // Difference between the two below is that the first one is implementing of the client
 
     try {
-      Registry registry = LocateRegistry.getRegistry(address);
+      Registry registry = LocateRegistry.getRegistry(address, 5000);
       central_server = (ICentralServer) registry.lookup("ICentralServer");
 
     } catch (RemoteException | NotBoundException e) {
