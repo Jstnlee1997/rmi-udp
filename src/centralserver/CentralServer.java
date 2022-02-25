@@ -99,7 +99,7 @@ public class CentralServer implements ICentralServer {
     int numMissing = msgTot - receivedMessages.size();
 
     /* TODO: Print stats (i.e. how many message missing? */
-    System.out.printf("Total Missing Messages = %d out of %d", numMissing, msgTot);
+    System.out.printf("Total Missing Messages = %d out of %d\n", numMissing, msgTot);
 
     /* TODO: Print the location of the Field Unit that sent the messages */
     /* NOT SURE HOW TO DEAL WITH LOCATION STUFF */
@@ -125,7 +125,7 @@ public class CentralServer implements ICentralServer {
   public void printLocation() throws RemoteException {
     /* TODO: Print location on screen from remote reference */
     try {
-      System.out.printf("[Field Unit] Current Location: lat = %f long = %f",
+      System.out.printf("[Field Unit] Current Location: lat = %f long = %f\n",
           locationSensor.getCurrentLocation().getLatitude(), locationSensor.getCurrentLocation().getLongitude());
     } catch (RemoteException e) {
       e.printStackTrace();

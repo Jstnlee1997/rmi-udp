@@ -8,6 +8,7 @@ import common.MessageInfo;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -67,10 +68,10 @@ public class FieldUnit implements IFieldUnit {
         movingAverages.set(i, receivedMessages.get(i).getMessage());
       } else {
         float sum = 0;
-        for (int j = 0; j < 7; j++) {
+        for (int j = 0; j < k; j++) {
           sum += receivedMessages.get(i - j).getMessage();
         }
-        movingAverages.set(i, 1 / k * sum);
+        movingAverages.set(i, sum / k);
       }
     }
   }
@@ -110,7 +111,7 @@ public class FieldUnit implements IFieldUnit {
 
       MessageInfo msg = null;
       try {
-        msg = new MessageInfo(Arrays.toString(buffer));
+        msg = new MessageInfo(new String(buffer, StandardCharsets.UTF_8));
       } catch (Exception ex) {
         ex.printStackTrace();
       }
@@ -158,13 +159,14 @@ public class FieldUnit implements IFieldUnit {
 
     /* TODO: Compute and print stats */
     fieldUnit.sMovingAverage(k);
+    fieldUnit.sendAverages();
     fieldUnit.printStats();
 
 
     /* TODO: Send data to the Central Serve via RMI and
      *        wait for incoming transmission again
      */
-    fieldUnit.sendAverages();
+
   }
 
 
@@ -204,7 +206,8 @@ public class FieldUnit implements IFieldUnit {
     /* TODO: Send pointer to LocationSensor to RMI Server */
     /* TODO: ensure that fieldUnit hosts a locationSensor */
     try {
-      central_server.setLocationSensor(this.locationSensor);
+      ILocationSensor stub = (ILocationSensor) UnicastRemoteObject.exportObject(this.locationSensor, 0);
+      central_server.setLocationSensor(stub);
     } catch (RemoteException e) {
       System.out.println("Server exception: " + e);
       e.printStackTrace();
@@ -214,7 +217,7 @@ public class FieldUnit implements IFieldUnit {
   @Override
   public void sendAverages() {
     /* TODO: Attempt to send messages the specified number of times */
-    int numberOfAverages = receivedMessages.size();
+    int numberOfAverages = movingAverages.size();
     int totalMessages = receivedMessages.get(0).getTotalMessages();
     for (int i = 0; i < numberOfAverages; i++) {
       // Create new MessageInfo where the message is the respective movingAverage
@@ -240,11 +243,11 @@ public class FieldUnit implements IFieldUnit {
      * do we know their sequence number? etc.) */
 
     for (int i = 0; i < movingAverages.size(); i++) {
-      System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f",
+      System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f\n",
           receivedMessages.get(i).getMessageNum(), msgTot, movingAverages.get(i));
     }
 
-    System.out.printf("Total Missing Messages = %d out of %d", missingMessages, msgTot);
+    System.out.printf("Total Missing Messages = %d out of %d\n", missingMessages, msgTot);
 
 
     /* TODO: Now re-initialise data structures for next time */

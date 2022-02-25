@@ -8,6 +8,7 @@ import field.FieldUnit;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 /* You can add/change/delete class attributes if you think it would be
@@ -101,7 +102,7 @@ public class Sensor implements ISensor {
       InetAddress dst_addr = InetAddress.getByName(address);
 
       /* Second, we create datagram packet for send */
-      DatagramPacket p = new DatagramPacket(toSend.getBytes(), toSend.getBytes().length, dst_addr, port);
+      DatagramPacket p = new DatagramPacket(toSend.getBytes(StandardCharsets.UTF_8), toSend.getBytes(StandardCharsets.UTF_8).length, dst_addr, port);
 
       /* Third, we send the message */
       try {
@@ -131,7 +132,7 @@ public class Sensor implements ISensor {
   }
 
   public void printMessage(MessageInfo msg) {
-    System.out.printf("[Sensor] Sending message %d out of %d. Measure = %f",
+    System.out.printf("[Sensor] Sending message %d out of %d. Measure = %f\n",
         msg.getMessageNum(), msg.getTotalMessages(), msg.getMessage());
   }
 }
