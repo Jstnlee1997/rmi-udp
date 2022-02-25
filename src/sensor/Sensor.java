@@ -41,6 +41,12 @@ public class Sensor implements ISensor {
     this.address = address;
     this.port = port;
     this.totMsg = totMsg;
+
+    try {
+      this.s = new DatagramSocket(port);
+    } catch (SocketException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
@@ -50,6 +56,7 @@ public class Sensor implements ISensor {
       float measurement = this.getMeasurement();
       MessageInfo msg = new MessageInfo(N, i, measurement);
       sendMessage(address, port, msg);
+      printMessage(msg);
     }
 
     /* Hint: You can pick ONE measurement by calling
@@ -104,6 +111,7 @@ public class Sensor implements ISensor {
       }
       s.send(p);
 
+
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -119,5 +127,10 @@ public class Sensor implements ISensor {
     Random r = new Random();
 
     return r.nextFloat() * (max_measure - min_measure) + min_measure;
+  }
+
+  public void printMessage(MessageInfo msg) {
+    System.out.printf("[Sensor] Sending message %d out of %d. Measure = %f",
+        msg.getMessageNum(), msg.getTotalMessages(), msg.getMessage());
   }
 }
