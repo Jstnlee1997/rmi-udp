@@ -170,7 +170,7 @@ public class FieldUnit implements IFieldUnit {
       fieldUnit.printStats();
 
       /* Stop fieldUnit from listening: */
-      fieldUnit.stopListening();
+      // fieldUnit.stopListening();
     }
 
   }
