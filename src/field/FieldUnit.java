@@ -152,15 +152,17 @@ public class FieldUnit implements IFieldUnit {
     fieldUnit.initRMI(address);
 
     /* TODO: Wait for incoming transmission */
-    fieldUnit.receiveMeasures(port, fieldUnit.timeout);
+    while(true) {
+      fieldUnit.receiveMeasures(port, fieldUnit.timeout);
 
-            /* TODO: Compute Averages - call sMovingAverage()
-                on Field Unit object */
+              /* TODO: Compute Averages - call sMovingAverage()
+                  on Field Unit object */
 
-    /* TODO: Compute and print stats */
-    fieldUnit.sMovingAverage(k);
-    fieldUnit.sendAverages();
-    fieldUnit.printStats();
+      /* TODO: Compute and print stats */
+      fieldUnit.sMovingAverage(k);
+      fieldUnit.sendAverages();
+      fieldUnit.printStats();
+    }
 
 
     /* TODO: Send data to the Central Serve via RMI and

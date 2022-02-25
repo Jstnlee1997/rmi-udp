@@ -38,7 +38,7 @@ public class MessageInfo implements Serializable {
 
   @Override
   public String toString() {
-    return new String(totalMessages + ";" + messageNum + ";" + message + "\n");
+    return new String(totalMessages + ";" + messageNum + ";" + message);
   }
 
   public float getMessage() {
