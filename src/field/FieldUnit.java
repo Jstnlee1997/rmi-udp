@@ -14,7 +14,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,19 +38,22 @@ public class FieldUnit implements IFieldUnit {
   private static final int buffsize = 2048;
   private int timeout = 50000;
   private static final int k = 7;
+  private static boolean isListening;
 
   List<MessageInfo> receivedMessages;
   List<Float> movingAverages;
 
 
-    public FieldUnit () {
-      /* TODO: Initialise data structures */
-      try {
-        locationSensor = new LocationSensor();
-      } catch (RemoteException e) {
-        e.printStackTrace();
-      }
+  public FieldUnit() {
+    /* TODO: Initialise data structures */
+    try {
+      locationSensor = new LocationSensor();
+    } catch (RemoteException e) {
+      e.printStackTrace();
     }
+
+    isListening = true;
+  }
 
   @Override
   public void addMessage(MessageInfo msg) {
@@ -97,8 +99,8 @@ public class FieldUnit implements IFieldUnit {
     System.out.println("[Field Unit] Listening on port: " + port);
 
     while (listen) {
-            /* TODO: Receive until all messages in the transmission (msgTot) have been received or
-                until there is nothing more to be received */
+      /* TODO: Receive until all messages in the transmission (msgTot) have been received or
+          until there is nothing more to be received */
       DatagramPacket request = new DatagramPacket(buffer, buffer.length);
 
       try {
@@ -152,22 +154,24 @@ public class FieldUnit implements IFieldUnit {
     fieldUnit.initRMI(address);
 
     /* TODO: Wait for incoming transmission */
-    while(true) {
+    while (fieldUnit.isListening()) {
       fieldUnit.receiveMeasures(port, fieldUnit.timeout);
 
-              /* TODO: Compute Averages - call sMovingAverage()
-                  on Field Unit object */
+      /* TODO: Compute Averages - call sMovingAverage() on Field Unit object */
+
+      fieldUnit.sMovingAverage(k);
+
+      /* TODO: Send data to the Central Serve via RMI and
+       *        wait for incoming transmission again
+       */
+      fieldUnit.sendAverages();
 
       /* TODO: Compute and print stats */
-      fieldUnit.sMovingAverage(k);
-      fieldUnit.sendAverages();
       fieldUnit.printStats();
+
+      /* Stop fieldUnit from listening: */
+      fieldUnit.stopListening();
     }
-
-
-    /* TODO: Send data to the Central Serve via RMI and
-     *        wait for incoming transmission again
-     */
 
   }
 
@@ -187,8 +191,6 @@ public class FieldUnit implements IFieldUnit {
     }
 
     /* TODO: Bind to RMIServer */
-    /* TODO: Check this! */
-    // Difference between the two below is that the first one is implementing of the client
 
     try {
       Registry registry = LocateRegistry.getRegistry(address, 5000);
@@ -197,11 +199,6 @@ public class FieldUnit implements IFieldUnit {
     } catch (RemoteException | NotBoundException e) {
       System.out.println("Server exception: " + e);
       e.printStackTrace();
-//
-//    try {
-//      central_server = (ICentralServer) Naming.lookup(address);
-//    } catch (NotBoundException | MalformedURLException | RemoteException e) {
-//      e.printStackTrace();
     }
 
 
@@ -256,6 +253,16 @@ public class FieldUnit implements IFieldUnit {
     receivedMessages = null;
     movingAverages = null;
 
+  }
+
+  public boolean isListening() {
+    /* TODO: Checks if fieldUnit is still listening */
+    return isListening;
+  }
+
+  public void stopListening() {
+    /* TODO: Stop fieldUnit from listening */
+    isListening = false;
   }
 
 

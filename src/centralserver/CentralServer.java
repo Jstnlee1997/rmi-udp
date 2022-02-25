@@ -34,7 +34,7 @@ public class CentralServer implements ICentralServer {
   protected CentralServer() throws RemoteException {
     super();
 
-    /* TODO: Initialise Array receivedMessages <<-- I DON'T SEE WHY WE DO THAT HERE*/
+    /* TODO: Initialise Array receivedMessages*/
 
   }
 
@@ -60,10 +60,7 @@ public class CentralServer implements ICentralServer {
 
     /* TODO: Bind to Registry */
     // Bind the remote object's stub in the registry
-    // CHECK THIS
     registry.rebind("ICentralServer", stub);
-//      Naming.rebind("CentralServer", )
-
     System.out.println("Central Server is running...");
 
   }
@@ -75,8 +72,7 @@ public class CentralServer implements ICentralServer {
         msg.getTotalMessages() + ". Measure = " + msg.getMessage());
 
     /* TODO: If this is the first message, reset counter and initialise data structure. */
-    if (msg.getMessageNum() == 1)
-    {
+    if (msg.getMessageNum() == 1) {
       msgCounter = 0;
       msgTot = msg.getTotalMessages();
       receivedMessages = new ArrayList<>();
@@ -87,9 +83,7 @@ public class CentralServer implements ICentralServer {
     msgCounter++;
 
     /* TODO: If I received everything that there was to be received, prints stats. */
-    // THIS NEEDS TO CHANGE
-    if(msgCounter == msgTot)
-    {
+    if (msgCounter == msgTot) {
       printStats();
     }
   }
@@ -102,7 +96,6 @@ public class CentralServer implements ICentralServer {
     System.out.printf("Total Missing Messages = %d out of %d\n", numMissing, msgTot);
 
     /* TODO: Print the location of the Field Unit that sent the messages */
-    /* NOT SURE HOW TO DEAL WITH LOCATION STUFF */
     try {
       printLocation();
     } catch (RemoteException e) {
@@ -126,7 +119,8 @@ public class CentralServer implements ICentralServer {
     /* TODO: Print location on screen from remote reference */
     try {
       System.out.printf("[Field Unit] Current Location: lat = %f long = %f\n",
-          locationSensor.getCurrentLocation().getLatitude(), locationSensor.getCurrentLocation().getLongitude());
+          locationSensor.getCurrentLocation().getLatitude(),
+          locationSensor.getCurrentLocation().getLongitude());
     } catch (RemoteException e) {
       e.printStackTrace();
     }

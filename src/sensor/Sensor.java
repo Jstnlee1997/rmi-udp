@@ -56,6 +56,8 @@ public class Sensor implements ISensor {
     for (int i = 1; i < N + 1; i++) {
       float measurement = this.getMeasurement();
       MessageInfo msg = new MessageInfo(N, i, measurement);
+
+      /* TODO: Call sendMessage() to send the msg to destination */
       sendMessage(address, port, msg);
       printMessage(msg);
     }
@@ -64,8 +66,6 @@ public class Sensor implements ISensor {
      *
      * float measurement = this.getMeasurement();
      */
-
-    /* TODO: Call sendMessage() to send the msg to destination */
 
   }
 
@@ -102,7 +102,8 @@ public class Sensor implements ISensor {
       InetAddress dst_addr = InetAddress.getByName(address);
 
       /* Second, we create datagram packet for send */
-      DatagramPacket p = new DatagramPacket(toSend.getBytes(StandardCharsets.UTF_8), toSend.getBytes(StandardCharsets.UTF_8).length, dst_addr, port);
+      DatagramPacket p = new DatagramPacket(toSend.getBytes(StandardCharsets.UTF_8),
+          toSend.getBytes(StandardCharsets.UTF_8).length, dst_addr, port);
 
       /* Third, we send the message */
       try {
