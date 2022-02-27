@@ -16,13 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.rmi.Naming;
 
-/* You can add/change/delete class attributes if you think it would be
- * appropriate.
- * You can also add helper methods and change the implementation of those
- * provided if you think it would be appropriate, as long as you DO NOT
- * CHANGE the provided interface.
- */
-/* TODO extend appropriate classes and implement the appropriate interfaces */
 public class CentralServer implements ICentralServer {
 
   private ILocationSensor locationSensor;
@@ -32,77 +25,69 @@ public class CentralServer implements ICentralServer {
   int msgTot;
 
   protected CentralServer() throws RemoteException {
+
     super();
-
-    /* TODO: Initialise Array receivedMessages*/
-
+    /* initialise Array receivedMessages*/
+    receivedMessages = null;
   }
 
   public static void main(String[] args) throws RemoteException {
+    /* initialise central server */
     ICentralServer cs = new CentralServer();
-
-    /* If you are running the program within an IDE instead of using the
-     * provided bash scripts, you can use the following line to set
-     * the policy file
-     */
-
     System.setProperty("java.security.policy", "file:./policy\n");
 
-    /* TODO: Configure Security Manager */
+    /* configure security manager */
     if (System.getSecurityManager() == null) {
       System.setSecurityManager(new RMISecurityManager());
     }
 
-    /* TODO: Create (or Locate) Registry */
-
+    /* create central server stub */
     ICentralServer stub = (ICentralServer) UnicastRemoteObject.exportObject(cs, 0);
+    /* create (or Locate) Registry */
     Registry registry = LocateRegistry.createRegistry(5000);
 
-    /* TODO: Bind to Registry */
-    // Bind the remote object's stub in the registry
+    /* Bind the remote object's stub in the registry */
     registry.rebind("ICentralServer", stub);
     System.out.println("Central Server is running...");
-
   }
 
 
   @Override
   public void receiveMsg(MessageInfo msg) {
+    /* print messages as received */
     System.out.println("[Central Server] Received message " + (msg.getMessageNum()) + " out of " +
         msg.getTotalMessages() + ". Measure = " + msg.getMessage());
 
-    /* TODO: If this is the first message, reset counter and initialise data structure. */
+    /* if this is the first message, reset counter and initialise data structure. */
     if (msg.getMessageNum() == 1) {
       msgCounter = 0;
       msgTot = msg.getTotalMessages();
       receivedMessages = new ArrayList<>();
     }
 
-    /* TODO: Save current message */
+    /* save current message */
     receivedMessages.add(msg);
     msgCounter++;
 
-    /* TODO: If I received everything that there was to be received, prints stats. */
-    if (msgCounter == msgTot) {
-      printStats();
-    }
+    /* if I received everything that there was to be received, prints stats. */
+    if (msg.getMessageNum() == msgTot) printStats();
   }
 
   public void printStats() {
-    /* TODO: Find out how many messages were missing */
+    /* find out how many messages were missing */
     int numMissing = msgTot - receivedMessages.size();
 
-    /* TODO: Print stats (i.e. how many message missing? */
+    /* print stats */
     System.out.printf("Total Missing Messages = %d out of %d\n", numMissing, msgTot);
 
-    /* TODO: Print the location of the Field Unit that sent the messages */
+    /* print the location of the Field Unit that sent the messages */
     try {
       printLocation();
     } catch (RemoteException e) {
       e.printStackTrace();
     }
 
-    /* TODO: Now re-initialise data structures for next time */
+    /* now re-initialise data structures for next time */
     receivedMessages = null;
 
   }
@@ -110,13 +95,13 @@ public class CentralServer implements ICentralServer {
   @Override
   public void setLocationSensor(ILocationSensor locationSensor) throws RemoteException {
 
-    /* TODO: Set location sensor */
+    /* set location sensor */
     this.locationSensor = locationSensor;
     System.out.println("Location Sensor Set");
   }
 
   public void printLocation() throws RemoteException {
-    /* TODO: Print location on screen from remote reference */
+    /* print location on screen from remote reference */
     try {
       System.out.printf("[Field Unit] Current Location: lat = %f long = %f\n",
           locationSensor.getCurrentLocation().getLatitude(),

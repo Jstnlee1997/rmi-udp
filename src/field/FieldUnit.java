@@ -17,58 +17,57 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/* You can add/change/delete class attributes if you think it would be
- * appropriate.
- * You can also add helper methods and change the implementation of those
- * provided if you think it would be appropriate, as long as you DO NOT
- * CHANGE the provided interface.
- */
-
 public class FieldUnit implements IFieldUnit {
   private ICentralServer central_server;
   private LocationSensor locationSensor;
 
-  /* Note: Could you discuss in one line of comment what do you think can be
+  /* QUESTION: Could you discuss in one line of comment what do you think can be
    * an appropriate size for buffsize?
-   * (Which is used to init DatagramPacket?)
    *
-   * A Chunk size is usually around 2MB hence the buffer size, and packets are usually much less in size.
+   * ANSWER: A Chunk size is usually around 2MB hence the buffer size, and packets are usually much less in size.
    */
 
   private static final int buffsize = 2048;
   private int timeout = 50000;
   private static final int k = 7;
-  private static boolean isListening;
+  private static boolean isListening = false;
 
   List<MessageInfo> receivedMessages;
   List<Float> movingAverages;
 
 
   public FieldUnit() {
-    /* TODO: Initialise data structures */
+    /* initialise data structures */
+    movingAverages = null;
+    receivedMessages = null;
+
     try {
+      /* initilise location sensor for field unit */
       locationSensor = new LocationSensor();
     } catch (RemoteException e) {
       e.printStackTrace();
     }
 
+    /* set field unit to be listening for measures */
     isListening = true;
   }
 
   @Override
   public void addMessage(MessageInfo msg) {
-    /* TODO: Save received message in receivedMessages */
+    /* save received message in receivedMessages */
     receivedMessages.add(msg);
   }
 
   @Override
   public void sMovingAverage(int k) {
-    /* TODO: Compute SMA and store values in a class attribute */
+    /* create a list to hold SMA */
     movingAverages = new ArrayList<>(Collections.nCopies(receivedMessages.size(), 0.0f));
     for (int i = 0; i < receivedMessages.size(); i++) {
+      /* for the first k messages, store original value as average */
       if (i < k) {
         movingAverages.set(i, receivedMessages.get(i).getMessage());
       } else {
+        /* compute k-=moving average of data and store in list */
         float sum = 0;
         for (int j = 0; j < k; j++) {
           sum += receivedMessages.get(i - j).getMessage();
@@ -86,8 +85,9 @@ public class FieldUnit implements IFieldUnit {
     boolean listen = true;
     byte[] buffer = new byte[buffsize];
     int msgCounter = 0;
+    int msgTot = 0;
 
-    /* TODO: Create UDP socket and bind to local port 'port' */
+    /* create UDP socket and bind to local port 'port' */
     DatagramSocket aSocket;
     try {
       aSocket = new DatagramSocket(port);
@@ -99,18 +99,19 @@ public class FieldUnit implements IFieldUnit {
     System.out.println("[Field Unit] Listening on port: " + port);
 
     while (listen) {
-      /* TODO: Receive until all messages in the transmission (msgTot) have been received or
+      /*  receive until all messages in the transmission (msgTot) have been received or
           until there is nothing more to be received */
       DatagramPacket request = new DatagramPacket(buffer, buffer.length);
 
+      /* set timeout */
       try {
-        // Set timeout
         aSocket.setSoTimeout(this.timeout);
         aSocket.receive(request);
       } catch (IOException ex) {
         ex.printStackTrace();
       }
 
+      /* read buffer and form message info structure */
       MessageInfo msg = null;
       try {
         msg = new MessageInfo(new String(buffer, StandardCharsets.UTF_8));
@@ -118,22 +119,27 @@ public class FieldUnit implements IFieldUnit {
         ex.printStackTrace();
       }
 
-      /* TODO: If this is the first message, initialise the receive data structure before storing it. */
+      /* if this is the first message, initialise the receive data structure before storing it. */
       if (msgCounter == 0) {
         assert msg != null;
+        msgTot = msg.getTotalMessages();
         receivedMessages = new ArrayList<>();
       }
 
-      /* TODO: Store the message */
+      /* print messages as they come in */
+      System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f\n",
+              msg.getMessageNum(), msgTot, msg.getMessage());
+
+      /* store the message */
       addMessage(msg);
       msgCounter++;
 
-      /* TODO: Keep listening UNTIL done with receiving  */
+      /* keep listening until done with receiving  */
       assert msg != null;
-      if (msg.getMessageNum() == msg.getTotalMessages()) listen = false;
+      if (msg.getMessageNum() == msgTot) listen = false;
     }
 
-    /* TODO: Close socket  */
+    /* close socket  */
     aSocket.close();
   }
 
@@ -143,30 +149,27 @@ public class FieldUnit implements IFieldUnit {
       return;
     }
 
-    /* TODO: Parse arguments */
+    /* parse arguments */
     int port = Integer.parseInt(args[0]);
     String address = args[1];
 
-    /* TODO: Construct Field Unit Object */
+    /* construct Field Unit Object */
     FieldUnit fieldUnit = new FieldUnit();
 
-    /* TODO: Call initRMI on the Field Unit Object */
+    /* call initRMI on the Field Unit Object */
     fieldUnit.initRMI(address);
 
-    /* TODO: Wait for incoming transmission */
-    while (fieldUnit.isListening()) {
+    /* wait for incoming transmission */
+    while (fieldUnit.isListening) {
       fieldUnit.receiveMeasures(port, fieldUnit.timeout);
 
-      /* TODO: Compute Averages - call sMovingAverage() on Field Unit object */
-
+      /* compute Averages - call sMovingAverage() on Field Unit object */
       fieldUnit.sMovingAverage(k);
 
-      /* TODO: Send data to the Central Serve via RMI and
-       *        wait for incoming transmission again
-       */
+      /* send data to the Central Serve via RMI and wait for incoming transmission again */
       fieldUnit.sendAverages();
 
-      /* TODO: Compute and print stats */
+      /* compute and print stats */
       fieldUnit.printStats();
 
       /* Stop fieldUnit from listening: */
@@ -178,20 +181,14 @@ public class FieldUnit implements IFieldUnit {
 
   @Override
   public void initRMI(String address) {
-    /* If you are running the program within an IDE instead of using the
-     * provided bash scripts, you can use the following line to set
-     * the policy file
-     */
-
     System.setProperty("java.security.policy", "file:./policy\n");
 
-    /* TODO: Initialise Security Manager */
+    /* initialise security manager */
     if (System.getSecurityManager() == null) {
       System.setSecurityManager(new SecurityManager());
     }
 
-    /* TODO: Bind to RMIServer */
-
+    /* bind to RMIServer */
     try {
       Registry registry = LocateRegistry.getRegistry(address, 5000);
       central_server = (ICentralServer) registry.lookup("ICentralServer");
@@ -201,10 +198,10 @@ public class FieldUnit implements IFieldUnit {
       e.printStackTrace();
     }
 
-
-    /* TODO: Send pointer to LocationSensor to RMI Server */
-    /* TODO: ensure that fieldUnit hosts a locationSensor */
+    /* send pointer to LocationSensor to RMI Server */
     try {
+      /* ensure that fieldUnit hosts a locationSensor */
+      assert locationSensor != null;
       ILocationSensor stub = (ILocationSensor) UnicastRemoteObject.exportObject(this.locationSensor, 0);
       central_server.setLocationSensor(stub);
     } catch (RemoteException e) {
@@ -215,11 +212,11 @@ public class FieldUnit implements IFieldUnit {
 
   @Override
   public void sendAverages() {
-    /* TODO: Attempt to send messages the specified number of times */
+    /* attempt to send messages the specified number of times */
     int numberOfAverages = movingAverages.size();
     int totalMessages = receivedMessages.get(0).getTotalMessages();
     for (int i = 0; i < numberOfAverages; i++) {
-      // Create new MessageInfo where the message is the respective movingAverage
+      /* create new MessageInfo where the message is the respective movingAverage */
       int messageNum = receivedMessages.get(i).getMessageNum();
       MessageInfo msg = new MessageInfo(totalMessages, messageNum, movingAverages.get(i));
       try {
@@ -228,42 +225,30 @@ public class FieldUnit implements IFieldUnit {
         e.printStackTrace();
       }
     }
-
-
   }
-
   @Override
   public void printStats() {
-    /* TODO: Find out how many messages were missing */
+    /* find out number of missing messages */
     int msgTot = receivedMessages.get(0).getTotalMessages();
     int missingMessages = msgTot - receivedMessages.size();
 
-    /* TODO: Print stats (i.e. how many message missing?
-     * do we know their sequence number? etc.) */
-
-    for (int i = 0; i < movingAverages.size(); i++) {
-      System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f\n",
-          receivedMessages.get(i).getMessageNum(), msgTot, movingAverages.get(i));
-    }
-
+    /* print number of missing messages */
     System.out.printf("Total Missing Messages = %d out of %d\n", missingMessages, msgTot);
 
 
-    /* TODO: Now re-initialise data structures for next time */
+    /* reinitialise data structures for next time */
     receivedMessages = null;
     movingAverages = null;
 
   }
 
   public boolean isListening() {
-    /* TODO: Checks if fieldUnit is still listening */
+    /* checks if fieldUnit is still listening */
     return isListening;
   }
 
   public void stopListening() {
-    /* TODO: Stop fieldUnit from listening */
+    /* stop fieldUnit from listening */
     isListening = false;
   }
-
-
 }

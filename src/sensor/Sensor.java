@@ -38,7 +38,7 @@ public class Sensor implements ISensor {
   private static final int buffsize = 2048;
 
   public Sensor(String address, int port, int totMsg) {
-    /* TODO: Build Sensor Object */
+    /* build Sensor Object */
     this.address = address;
     this.port = port;
     this.totMsg = totMsg;
@@ -52,21 +52,15 @@ public class Sensor implements ISensor {
 
   @Override
   public void run(int N) throws InterruptedException {
-    /* TODO: Send N measurements */
-    for (int i = 1; i < N + 1; i++) {
+    /* send N measurements */
+    for (int i = 1; i <= N; i++) {
       float measurement = this.getMeasurement();
       MessageInfo msg = new MessageInfo(N, i, measurement);
 
-      /* TODO: Call sendMessage() to send the msg to destination */
+      /* call sendMessage() to send the msg to destination */
       sendMessage(address, port, msg);
       printMessage(msg);
     }
-
-    /* Hint: You can pick ONE measurement by calling
-     *
-     * float measurement = this.getMeasurement();
-     */
-
   }
 
   public static void main(String[] args) {
@@ -80,10 +74,10 @@ public class Sensor implements ISensor {
     int port = Integer.parseInt(args[1]);
     int totMsg = Integer.parseInt(args[2]);
 
-    /* TODO: Call constructor of sensor to build Sensor object*/
+    /* call constructor of sensor to build Sensor object*/
     Sensor sensor = new Sensor(address, port, totMsg);
 
-    /* TODO: Use Run to send the messages */
+    /* use Run to send the messages */
     try {
       sensor.run(sensor.totMsg);
     } catch (InterruptedException e) {
@@ -94,18 +88,18 @@ public class Sensor implements ISensor {
 
   @Override
   public void sendMessage(String address, int port, MessageInfo msg) {
+    /* convert message to string */
     String toSend = msg.toString();
 
-    /* TODO: Build destination address object */
     try {
-      /* Build the destination address object */
+      /* build the destination address object */
       InetAddress dst_addr = InetAddress.getByName(address);
 
-      /* Second, we create datagram packet for send */
+      /* create datagram packet for send */
       DatagramPacket p = new DatagramPacket(toSend.getBytes(StandardCharsets.UTF_8),
           toSend.getBytes(StandardCharsets.UTF_8).length, dst_addr, port);
 
-      /* Third, we send the message */
+      /* send the message */
       try {
         s = new DatagramSocket();
         s.connect(dst_addr, port);
@@ -113,26 +107,20 @@ public class Sensor implements ISensor {
         e.printStackTrace();
       }
       s.send(p);
-
-
     } catch (IOException e) {
       e.printStackTrace();
     }
-
-    /* TODO: Build datagram packet to send */
-
-    /* TODO: Send packet */
-
   }
 
   @Override
   public float getMeasurement() {
+    /* measures generated at random */
     Random r = new Random();
-
     return r.nextFloat() * (max_measure - min_measure) + min_measure;
   }
 
   public void printMessage(MessageInfo msg) {
+    /* print measure info */
     System.out.printf("[Sensor] Sending message %d out of %d. Measure = %f\n",
         msg.getMessageNum(), msg.getTotalMessages(), msg.getMessage());
   }
