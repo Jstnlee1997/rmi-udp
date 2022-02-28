@@ -24,6 +24,9 @@ public class CentralServer implements ICentralServer {
   int msgCounter;
   int msgTot;
 
+  private static long startTime = 0;
+  private static long endTime = 0;
+
   protected CentralServer() throws RemoteException {
 
     super();
@@ -60,6 +63,9 @@ public class CentralServer implements ICentralServer {
 
     /* if this is the first message, reset counter and initialise data structure. */
     if (msg.getMessageNum() == 1) {
+      // Start counting duration of receiving messages
+      startTime = System.nanoTime();
+
       msgCounter = 0;
       msgTot = msg.getTotalMessages();
       receivedMessages = new ArrayList<>();
@@ -70,7 +76,10 @@ public class CentralServer implements ICentralServer {
     msgCounter++;
 
     /* if I received everything that there was to be received, prints stats. */
-    if (msg.getMessageNum() == msgTot) printStats();
+    if (msg.getMessageNum() == msgTot) {
+      endTime = System.nanoTime();
+      printStats();
+    }
   }
 
   public void printStats() {
@@ -89,6 +98,10 @@ public class CentralServer implements ICentralServer {
 
     /* now re-initialise data structures for next time */
     receivedMessages = null;
+
+    // Print duration for communication
+    long duration = (endTime - startTime);  //divide by 1000000 to get milliseconds.
+    System.out.printf("Duration for RMI communication is: %d", duration);
 
   }
 

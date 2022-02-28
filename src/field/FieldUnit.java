@@ -32,6 +32,9 @@ public class FieldUnit implements IFieldUnit {
   private static final int k = 7;
   private static boolean isListening = false;
 
+  private static long startTime = 0;
+  private static long endTime = 0;
+
   List<MessageInfo> receivedMessages;
   List<Float> movingAverages;
 
@@ -126,9 +129,12 @@ public class FieldUnit implements IFieldUnit {
         assert msg != null;
         msgTot = msg.getTotalMessages();
         receivedMessages = new ArrayList<>();
+        startTime = System.nanoTime();
+
       }
 
       /* print messages as they come in */
+      assert msg != null;
       System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f\n",
               msg.getMessageNum(), msgTot, msg.getMessage());
 
@@ -137,9 +143,9 @@ public class FieldUnit implements IFieldUnit {
       msgCounter++;
 
       /* keep listening until done with receiving  */
-      assert msg != null;
       if (msg.getMessageNum() == msgTot) listen = false;
     }
+    endTime = System.nanoTime();
 
     /* close socket  */
     aSocket.close();
@@ -162,7 +168,7 @@ public class FieldUnit implements IFieldUnit {
     fieldUnit.initRMI(address);
 
     /* wait for incoming transmission */
-    while (fieldUnit.isListening) {
+    while (isListening) {
       fieldUnit.receiveMeasures(port, fieldUnit.timeout);
 
       /* compute Averages - call sMovingAverage() on Field Unit object */
@@ -241,6 +247,10 @@ public class FieldUnit implements IFieldUnit {
     /* reinitialise data structures for next time */
     receivedMessages = null;
     movingAverages = null;
+
+    // Print duration for communication
+    long duration = (endTime - startTime);  //divide by 1000000 to get milliseconds.
+    System.out.printf("Duration for UDP communication is: %d", duration);
 
   }
 
