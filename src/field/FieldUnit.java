@@ -28,7 +28,7 @@ public class FieldUnit implements IFieldUnit {
    */
 
   private static final int buffsize = 2048;
-  private int timeout = 50000;
+  private int timeout = 5000;
   private static final int k = 7;
   private static boolean isListening = false;
 
@@ -108,7 +108,9 @@ public class FieldUnit implements IFieldUnit {
         aSocket.setSoTimeout(this.timeout);
         aSocket.receive(request);
       } catch (IOException ex) {
+        System.err.println("Excpeption: Set timeout failed in field unit message reciever.");
         ex.printStackTrace();
+        System.exit(1);
       }
 
       /* read buffer and form message info structure */
