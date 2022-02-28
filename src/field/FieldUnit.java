@@ -28,7 +28,7 @@ public class FieldUnit implements IFieldUnit {
    */
 
   private static final int buffsize = 2048;
-  private int timeout = 5000;
+  private int timeout = 10000; // 10 seconds
   private static final int k = 7;
   private static boolean isListening = false;
 
@@ -45,7 +45,7 @@ public class FieldUnit implements IFieldUnit {
     receivedMessages = null;
 
     try {
-      /* initilise location sensor for field unit */
+      /* initialise location sensor for field unit */
       locationSensor = new LocationSensor();
     } catch (RemoteException e) {
       e.printStackTrace();
@@ -111,7 +111,7 @@ public class FieldUnit implements IFieldUnit {
         aSocket.setSoTimeout(this.timeout);
         aSocket.receive(request);
       } catch (IOException ex) {
-        System.err.println("Excpeption: Set timeout failed in field unit message reciever.");
+        System.err.println("Exception: Set timeout failed in field unit message receiver.");
         ex.printStackTrace();
         System.exit(1);
       }
@@ -124,11 +124,13 @@ public class FieldUnit implements IFieldUnit {
         ex.printStackTrace();
       }
 
-      /* if this is the first message, initialise the receive data structure before storing it. */
+      /* if this is the first message, initialise the receivedMessages data structure before storing it. */
       if (msgCounter == 0) {
         assert msg != null;
         msgTot = msg.getTotalMessages();
         receivedMessages = new ArrayList<>();
+
+        // Start timing duration of communication
         startTime = System.nanoTime();
 
       }
@@ -145,6 +147,8 @@ public class FieldUnit implements IFieldUnit {
       /* keep listening until done with receiving  */
       if (msg.getMessageNum() == msgTot) listen = false;
     }
+
+    // Record the end time after receiving last message
     endTime = System.nanoTime();
 
     /* close socket  */
@@ -168,7 +172,7 @@ public class FieldUnit implements IFieldUnit {
     fieldUnit.initRMI(address);
 
     /* wait for incoming transmission */
-    while (isListening) {
+    while (isListening()) {
       fieldUnit.receiveMeasures(port, fieldUnit.timeout);
 
       /* compute Averages - call sMovingAverage() on Field Unit object */
@@ -183,7 +187,6 @@ public class FieldUnit implements IFieldUnit {
       /* Stop fieldUnit from listening: */
       // fieldUnit.stopListening();
     }
-
   }
 
 
@@ -249,12 +252,12 @@ public class FieldUnit implements IFieldUnit {
     movingAverages = null;
 
     // Print duration for communication
-    long duration = (endTime - startTime);  //divide by 1000000 to get milliseconds.
+    long duration = (endTime - startTime)/1000000;  //divide by 1000000 to get milliseconds.
     System.out.printf("Duration for UDP communication is: %d", duration);
 
   }
 
-  public boolean isListening() {
+  public static boolean isListening() {
     /* checks if fieldUnit is still listening */
     return isListening;
   }

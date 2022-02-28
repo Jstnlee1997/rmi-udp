@@ -5,16 +5,13 @@ import field.ILocationSensor;
 /*
  * Created on Feb 2022
  */
-import java.rmi.AlreadyBoundException;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.rmi.Naming;
 
 public class CentralServer implements ICentralServer {
 
@@ -77,6 +74,7 @@ public class CentralServer implements ICentralServer {
 
     /* if I received everything that there was to be received, prints stats. */
     if (msg.getMessageNum() == msgTot) {
+      // Record the end time after receiving last message
       endTime = System.nanoTime();
       printStats();
     }
@@ -100,7 +98,7 @@ public class CentralServer implements ICentralServer {
     receivedMessages = null;
 
     // Print duration for communication
-    long duration = (endTime - startTime);  //divide by 1000000 to get milliseconds.
+    long duration = (endTime - startTime)/1000000;  //divide by 1000000 to get milliseconds.
     System.out.printf("Duration for RMI communication is: %d", duration);
 
   }

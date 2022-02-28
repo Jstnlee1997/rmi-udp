@@ -4,7 +4,6 @@ package sensor;
  */
 
 import common.MessageInfo;
-import field.FieldUnit;
 
 import java.io.IOException;
 import java.net.*;
