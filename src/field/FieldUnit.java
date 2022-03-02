@@ -37,6 +37,7 @@ public class FieldUnit implements IFieldUnit {
 
   List<MessageInfo> receivedMessages;
   List<Float> movingAverages;
+  List<Integer> missingMessages;
 
 
   public FieldUnit() {
@@ -133,12 +134,29 @@ public class FieldUnit implements IFieldUnit {
         // Start timing duration of communication
         startTime = System.nanoTime();
 
+        // Check if first message is not message number 1
+        if (msg.getMessageNum() != 1) {
+          // Add all missing messages before this into missingMessages
+          for (int i=1; i<msg.getMessageNum(); i++) {
+            missingMessages.add(i);
+          }
+        }
+
       }
 
       /* print messages as they come in */
       assert msg != null;
       System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f\n",
               msg.getMessageNum(), msgTot, msg.getMessage());
+
+      /* Check if there are missing messages */
+      // Compare current message number with last message in receivedMessages
+      if (receivedMessages.size() > 0
+          && msg.getMessageNum() != receivedMessages.get(msgCounter-1).getMessageNum() + 1) {
+        for (int i=receivedMessages.get(msgCounter-1).getMessageNum() + 1; i<msg.getMessageNum(); i++) {
+          missingMessages.add(i);
+        }
+      }
 
       /* store the message */
       addMessage(msg);
@@ -237,15 +255,20 @@ public class FieldUnit implements IFieldUnit {
       }
     }
   }
+
   @Override
   public void printStats() {
     /* find out number of missing messages */
     int msgTot = receivedMessages.get(0).getTotalMessages();
-    int missingMessages = msgTot - receivedMessages.size();
+    int numberOfMissingMessages = msgTot - receivedMessages.size();
 
     /* print number of missing messages */
-    System.out.printf("Total Missing Messages = %d out of %d\n", missingMessages, msgTot);
+    System.out.printf("Total Missing Messages = %d out of %d\n", numberOfMissingMessages, msgTot);
 
+    /* print out message numbers that were lost */
+    if (numberOfMissingMessages > 0) {
+      System.out.printf("Missing message numbers are: %s", missingMessages);
+    }
 
     /* reinitialise data structures for next time */
     receivedMessages = null;

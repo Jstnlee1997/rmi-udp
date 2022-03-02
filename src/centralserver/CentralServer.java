@@ -18,7 +18,9 @@ public class CentralServer implements ICentralServer {
   private ILocationSensor locationSensor;
 
   List<MessageInfo> receivedMessages;
-  int msgCounter;
+  List<Integer> missingMessages;
+
+  int msgCounter=0;
   int msgTot;
 
   private static long startTime = 0;
@@ -59,13 +61,29 @@ public class CentralServer implements ICentralServer {
         msg.getTotalMessages() + ". Measure = " + msg.getMessage());
 
     /* if this is the first message, reset counter and initialise data structure. */
-    if (msg.getMessageNum() == 1) {
+    if (msgCounter == 0) {
+      msgTot = msg.getTotalMessages();
+      receivedMessages = new ArrayList<>();
+
       // Start counting duration of receiving messages
       startTime = System.nanoTime();
 
-      msgCounter = 0;
-      msgTot = msg.getTotalMessages();
-      receivedMessages = new ArrayList<>();
+      // Check if first message is not message number 1
+      if (msg.getMessageNum() != 1) {
+        // Add all missing messages before this into missingMessages
+        for (int i=1; i<msg.getMessageNum(); i++) {
+          missingMessages.add(i);
+        }
+      }
+    }
+
+    /* Check if there are missing messages */
+    // Compare current message number with last message in receivedMessages
+    if (receivedMessages.size() > 0
+        && msg.getMessageNum() != receivedMessages.get(msgCounter-1).getMessageNum() + 1) {
+      for (int i=receivedMessages.get(msgCounter-1).getMessageNum() + 1; i<msg.getMessageNum(); i++) {
+        missingMessages.add(i);
+      }
     }
 
     /* save current message */
@@ -77,15 +95,23 @@ public class CentralServer implements ICentralServer {
       // Record the end time after receiving last message
       endTime = System.nanoTime();
       printStats();
+
+      // Reset message counter
+      msgCounter = 0;
     }
   }
 
   public void printStats() {
     /* find out how many messages were missing */
-    int numMissing = msgTot - receivedMessages.size();
+    int numberOfMissingMessages = msgTot - receivedMessages.size();
 
     /* print stats */
-    System.out.printf("Total Missing Messages = %d out of %d\n", numMissing, msgTot);
+    System.out.printf("Total Missing Messages = %d out of %d\n", numberOfMissingMessages, msgTot);
+
+    /* print out message numbers that were lost */
+    if (numberOfMissingMessages > 0) {
+      System.out.printf("Missing message numbers are: %s", missingMessages);
+    }
 
     /* print the location of the Field Unit that sent the messages */
     try {
