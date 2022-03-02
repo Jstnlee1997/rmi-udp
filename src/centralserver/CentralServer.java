@@ -20,7 +20,7 @@ public class CentralServer implements ICentralServer {
   List<MessageInfo> receivedMessages;
   List<Integer> missingMessages;
 
-  int msgCounter=0;
+  int msgCounter = 0;
   int msgTot;
 
   private static long startTime = 0;
@@ -44,7 +44,8 @@ public class CentralServer implements ICentralServer {
     }
 
     /* create central server stub */
-    ICentralServer stub = (ICentralServer) UnicastRemoteObject.exportObject(cs, 0);
+    ICentralServer stub =
+        (ICentralServer) UnicastRemoteObject.exportObject(cs, 0);
     /* create (or Locate) Registry */
     Registry registry = LocateRegistry.createRegistry(5000);
 
@@ -57,15 +58,16 @@ public class CentralServer implements ICentralServer {
   @Override
   public void receiveMsg(MessageInfo msg) {
     /* print messages as received */
-    System.out.println("[Central Server] Received message " + (msg.getMessageNum()) + " out of " +
+    System.out.println("[Central Server] Received message "
+        + (msg.getMessageNum()) + " out of " +
         msg.getTotalMessages() + ". Measure = " + msg.getMessage());
 
-    /* if this is the first message, reset counter and initialise data structure. */
+    /* if this is the first message, initialise data structures. */
     if (msgCounter == 0) {
       msgTot = msg.getTotalMessages();
       receivedMessages = new ArrayList<>();
       missingMessages = new ArrayList<>();
-      
+
 
       // Start counting duration of receiving messages
       startTime = System.nanoTime();
@@ -73,7 +75,7 @@ public class CentralServer implements ICentralServer {
       // Check if first message is not message number 1
       if (msg.getMessageNum() != 1) {
         // Add all missing messages before this into missingMessages
-        for (int i=1; i<msg.getMessageNum(); i++) {
+        for (int i = 1; i < msg.getMessageNum(); i++) {
           missingMessages.add(i);
         }
       }
@@ -82,8 +84,10 @@ public class CentralServer implements ICentralServer {
     /* Check if there are missing messages */
     // Compare current message number with last message in receivedMessages
     if (receivedMessages.size() > 0
-        && msg.getMessageNum() != receivedMessages.get(msgCounter-1).getMessageNum() + 1) {
-      for (int i=receivedMessages.get(msgCounter-1).getMessageNum() + 1; i<msg.getMessageNum(); i++) {
+        && msg.getMessageNum()
+        != receivedMessages.get(msgCounter - 1).getMessageNum() + 1) {
+      for (int i = receivedMessages.get(msgCounter - 1).getMessageNum() + 1;
+           i < msg.getMessageNum(); i++) {
         missingMessages.add(i);
       }
     }
@@ -92,7 +96,7 @@ public class CentralServer implements ICentralServer {
     receivedMessages.add(msg);
     msgCounter++;
 
-    /* if I received everything that there was to be received, prints stats. */
+    /* Print stats if all messages have been received */
     if (msg.getMessageNum() == msgTot) {
       // Record the end time after receiving last message
       endTime = System.nanoTime();
@@ -108,11 +112,13 @@ public class CentralServer implements ICentralServer {
     int numberOfMissingMessages = msgTot - receivedMessages.size();
 
     /* print stats */
-    System.out.printf("Total Missing Messages = %d out of %d\n", numberOfMissingMessages, msgTot);
+    System.out.printf("Total Missing Messages = %d out of %d\n",
+        numberOfMissingMessages, msgTot);
 
     /* print out message numbers that were lost */
     if (numberOfMissingMessages > 0) {
-      System.out.printf("Missing message numbers are: %s \n", missingMessages);
+      System.out.printf("Missing message numbers are: %s \n",
+          missingMessages);
     }
 
     /* print the location of the Field Unit that sent the messages */
@@ -127,8 +133,9 @@ public class CentralServer implements ICentralServer {
     missingMessages = null;
 
     // Print duration for communication
-    long duration = (endTime - startTime)/1000000;  //divide by 1000000 to get milliseconds.
-    System.out.printf("Duration for RMI communication is: %d milliseconds\n", duration);
+    long duration = (endTime - startTime) / 1000000;  // get milliseconds.
+    System.out.printf("Duration for RMI communication is: %d milliseconds\n",
+        duration);
 
   }
 

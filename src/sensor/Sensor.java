@@ -32,7 +32,8 @@ public class Sensor implements ISensor {
    * an appropriate size for buffsize?
    * (Which is used to init DatagramPacket?)
    *
-   * A Chunk size is usually around 2MB hence the buffer size, and packets are usually much less in size.
+   * A Chunk size is usually around 2MB hence the buffer size,
+   * and packets are usually much less in size.
    */
   private static final int buffsize = 2048;
 
@@ -95,8 +96,9 @@ public class Sensor implements ISensor {
       InetAddress dst_addr = InetAddress.getByName(address);
 
       /* create datagram packet for send */
-      DatagramPacket p = new DatagramPacket(toSend.getBytes(StandardCharsets.UTF_8),
-          toSend.getBytes(StandardCharsets.UTF_8).length, dst_addr, port);
+      DatagramPacket p =
+          new DatagramPacket(toSend.getBytes(StandardCharsets.UTF_8),
+              toSend.getBytes(StandardCharsets.UTF_8).length, dst_addr, port);
 
       /* send the message */
       try {

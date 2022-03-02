@@ -24,7 +24,8 @@ public class FieldUnit implements IFieldUnit {
   /* QUESTION: Could you discuss in one line of comment what do you think can be
    * an appropriate size for buffsize?
    *
-   * ANSWER: A Chunk size is usually around 2MB hence the buffer size, and packets are usually much less in size.
+   * ANSWER: A Chunk size is usually around 2MB hence the buffer size,
+   * and packets are usually much less in size.
    */
 
   private static final int buffsize = 2048;
@@ -66,7 +67,8 @@ public class FieldUnit implements IFieldUnit {
   @Override
   public void sMovingAverage(int k) {
     /* create a list to hold SMA */
-    movingAverages = new ArrayList<>(Collections.nCopies(receivedMessages.size(), 0.0f));
+    movingAverages =
+        new ArrayList<>(Collections.nCopies(receivedMessages.size(), 0.0f));
     for (int i = 0; i < receivedMessages.size(); i++) {
       /* for the first k messages, store original value as average */
       if (i < k) {
@@ -104,8 +106,8 @@ public class FieldUnit implements IFieldUnit {
     System.out.println("[Field Unit] Listening on port: " + port);
 
     while (listen) {
-      /*  receive until all messages in the transmission (msgTot) have been received or
-          until there is nothing more to be received */
+      /*  receive until all messages in the transmission (msgTot) have been received
+          or until there is nothing more to be received */
       DatagramPacket request = new DatagramPacket(buffer, buffer.length);
 
       /* set timeout */
@@ -126,7 +128,7 @@ public class FieldUnit implements IFieldUnit {
         ex.printStackTrace();
       }
 
-      /* if this is the first message, initialise the receivedMessages data structure before storing it. */
+      /* if this is the first message, initialise the data structures */
       if (msgCounter == 0) {
         assert msg != null;
         msgTot = msg.getTotalMessages();
@@ -138,8 +140,8 @@ public class FieldUnit implements IFieldUnit {
 
         // Check if first message is not message number 1
         if (msg.getMessageNum() != 1) {
-          // Add all missing messages before this into missingMessages
-          for (int i=1; i<msg.getMessageNum(); i++) {
+          // Add all missing messages before current message
+          for (int i = 1; i < msg.getMessageNum(); i++) {
             missingMessages.add(i);
           }
         }
@@ -148,14 +150,17 @@ public class FieldUnit implements IFieldUnit {
 
       /* print messages as they come in */
       assert msg != null;
-      System.out.printf("[Field Unit] Received message %d out of %d received. Value = %f\n",
-              msg.getMessageNum(), msgTot, msg.getMessage());
+      System.out.printf("[Field Unit] Received message %d out of %d received. " +
+              "Value = %f\n",
+          msg.getMessageNum(), msgTot, msg.getMessage());
 
       /* Check if there are missing messages */
       // Compare current message number with last message in receivedMessages
       if (receivedMessages.size() > 0
-          && msg.getMessageNum() != receivedMessages.get(msgCounter-1).getMessageNum() + 1) {
-        for (int i=receivedMessages.get(msgCounter-1).getMessageNum() + 1; i<msg.getMessageNum(); i++) {
+          && msg.getMessageNum()
+          != receivedMessages.get(msgCounter - 1).getMessageNum() + 1) {
+        for (int i = receivedMessages.get(msgCounter - 1).getMessageNum() + 1;
+             i < msg.getMessageNum(); i++) {
           missingMessages.add(i);
         }
       }
@@ -198,7 +203,7 @@ public class FieldUnit implements IFieldUnit {
       /* compute Averages - call sMovingAverage() on Field Unit object */
       fieldUnit.sMovingAverage(k);
 
-      /* send data to the Central Serve via RMI and wait for incoming transmission again */
+      /* send data to the Central Serve via RMI */
       fieldUnit.sendAverages();
 
       /* compute and print stats */
@@ -233,7 +238,8 @@ public class FieldUnit implements IFieldUnit {
     try {
       /* ensure that fieldUnit hosts a locationSensor */
       assert locationSensor != null;
-      ILocationSensor stub = (ILocationSensor) UnicastRemoteObject.exportObject(this.locationSensor, 0);
+      ILocationSensor stub =
+          (ILocationSensor) UnicastRemoteObject.exportObject(this.locationSensor, 0);
       central_server.setLocationSensor(stub);
     } catch (RemoteException e) {
       System.out.println("Server exception: " + e);
@@ -249,7 +255,8 @@ public class FieldUnit implements IFieldUnit {
     for (int i = 0; i < numberOfAverages; i++) {
       /* create new MessageInfo where the message is the respective movingAverage */
       int messageNum = receivedMessages.get(i).getMessageNum();
-      MessageInfo msg = new MessageInfo(totalMessages, messageNum, movingAverages.get(i));
+      MessageInfo msg =
+          new MessageInfo(totalMessages, messageNum, movingAverages.get(i));
       try {
         this.central_server.receiveMsg(msg);
       } catch (RemoteException e) {
@@ -265,11 +272,13 @@ public class FieldUnit implements IFieldUnit {
     int numberOfMissingMessages = msgTot - receivedMessages.size();
 
     /* print number of missing messages */
-    System.out.printf("Total Missing Messages = %d out of %d\n", numberOfMissingMessages, msgTot);
+    System.out.printf("Total Missing Messages = %d out of %d\n",
+        numberOfMissingMessages, msgTot);
 
     /* print out message numbers that were lost */
     if (numberOfMissingMessages > 0) {
-      System.out.printf("Missing message numbers are: %s \n", missingMessages);
+      System.out.printf("Missing message numbers are: %s \n",
+          missingMessages);
     }
 
     /* reinitialise data structures for next time */
@@ -277,8 +286,9 @@ public class FieldUnit implements IFieldUnit {
     movingAverages = null;
 
     // Print duration for communication
-    long duration = (endTime - startTime)/1000000;  //divide by 1000000 to get milliseconds.
-    System.out.printf("Duration for UDP communication is: %d milliseconds\n", duration);
+    long duration = (endTime - startTime) / 1000000;  // get milliseconds.
+    System.out.printf("Duration for UDP communication is: %d milliseconds\n",
+        duration);
 
   }
 
