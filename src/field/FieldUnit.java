@@ -44,6 +44,7 @@ public class FieldUnit implements IFieldUnit {
     /* initialise data structures */
     movingAverages = null;
     receivedMessages = null;
+    missingMessages = null;
 
     try {
       /* initialise location sensor for field unit */
@@ -130,6 +131,7 @@ public class FieldUnit implements IFieldUnit {
         assert msg != null;
         msgTot = msg.getTotalMessages();
         receivedMessages = new ArrayList<>();
+        missingMessages = new ArrayList<>();
 
         // Start timing duration of communication
         startTime = System.nanoTime();
@@ -267,7 +269,7 @@ public class FieldUnit implements IFieldUnit {
 
     /* print out message numbers that were lost */
     if (numberOfMissingMessages > 0) {
-      System.out.printf("Missing message numbers are: %s", missingMessages);
+      System.out.printf("Missing message numbers are: %s \n", missingMessages);
     }
 
     /* reinitialise data structures for next time */

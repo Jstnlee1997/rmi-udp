@@ -64,6 +64,8 @@ public class CentralServer implements ICentralServer {
     if (msgCounter == 0) {
       msgTot = msg.getTotalMessages();
       receivedMessages = new ArrayList<>();
+      missingMessages = new ArrayList<>();
+      
 
       // Start counting duration of receiving messages
       startTime = System.nanoTime();
@@ -110,7 +112,7 @@ public class CentralServer implements ICentralServer {
 
     /* print out message numbers that were lost */
     if (numberOfMissingMessages > 0) {
-      System.out.printf("Missing message numbers are: %s", missingMessages);
+      System.out.printf("Missing message numbers are: %s \n", missingMessages);
     }
 
     /* print the location of the Field Unit that sent the messages */
@@ -122,6 +124,7 @@ public class CentralServer implements ICentralServer {
 
     /* now re-initialise data structures for next time */
     receivedMessages = null;
+    missingMessages = null;
 
     // Print duration for communication
     long duration = (endTime - startTime)/1000000;  //divide by 1000000 to get milliseconds.
